@@ -31,8 +31,6 @@ export function getKapetaEnvVars(processEnvVars: EnvVarMap = process.env): EnvVa
  * - SOME_KEY_0=1
  * - SOME_KEY_1=2
  * - SOME_KEY_2=3
- * @param key
- * @param value
  */
 export function explodeEnvValue(key: string, value: string): EnvVarMap {
     const envVars: EnvVarMap = {};
@@ -52,6 +50,16 @@ export function explodeEnvValue(key: string, value: string): EnvVarMap {
     }
 
     return envVars;
+}
+
+export function explodeEnvVars(processEnvVars: EnvVarMap = process.env): EnvVarMap {
+    const exploded: EnvVarMap = {};
+    Object.entries(processEnvVars).forEach(([key, value]) => {
+        const envVars = explodeEnvValue(key, value || '');
+        Object.assign(exploded, envVars);
+    });
+
+    return exploded;
 }
 
 function flattenObject(obj: EnvVarMap, prefix:string = ''): EnvVarMap {

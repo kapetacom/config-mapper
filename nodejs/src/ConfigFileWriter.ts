@@ -1,11 +1,9 @@
 import FS from 'node:fs/promises';
+import {interpolateVariablesInValue} from "./dotenv-interpolation";
+
 
 export type ConfigFileTemplates = {
     [path: string]: string;
-}
-
-export type ConfigData = {
-    [key: string]: string|number|boolean;
 }
 
 export class ConfigFileWriter {
@@ -15,7 +13,7 @@ export class ConfigFileWriter {
         this.templates = templates;
     }
 
-    public render(data:ConfigData) {
+    public render(data:Record<string,string>) {
         const rendered: {[path:string]: string} = {};
         for(const path in this.templates) {
             rendered[path] = this.renderTemplate(path, data);
@@ -23,7 +21,7 @@ export class ConfigFileWriter {
         return rendered;
     }
 
-    public async write(data:ConfigData) {
+    public async write(data:Record<string,string>) {
         const rendered = this.render(data);
         const entries = Object.entries(rendered);
         for(const [path, value] of entries) {
@@ -32,19 +30,14 @@ export class ConfigFileWriter {
         }
     }
 
-    public renderTemplate(path:string, data:ConfigData):string {
+    public renderTemplate(path:string, data:Record<string,string>):string {
         if (!(path in this.templates)) {
             throw new Error(`Template not found: ${path}`);
         }
 
         const template = this.templates[path];
 
-        return template.replace(/\${([^}]+)}/g, (match, key) => {
-            if (!(key in data)) {
-                throw new Error(`Data not found for key: ${key}`);
-            }
-            return data[key].toString();
-        });
+        return interpolateVariablesInValue(template, data);
 
     }
 }
