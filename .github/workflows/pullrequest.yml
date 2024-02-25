@@ -1,7 +1,6 @@
 name: Pull request
 on:
   pull_request:
-    types: [opened, synchronize]
 jobs:
 
   build-node:
