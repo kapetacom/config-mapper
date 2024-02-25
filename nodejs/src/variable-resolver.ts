@@ -49,7 +49,7 @@ const uriMapper = (p: DefinitionInfo) => {
  * The variables are basically environment variables that are used to configure the block,
  * but they are also used for creating configuration files
  */
-class KapetaVariableResolver {
+export class KapetaVariableResolver {
     private readonly configProvider: ConfigProvider;
     private readonly definitions: { definition: Definition; uri: KapetaURI }[];
     private readonly block: BlockDefinition;
@@ -248,8 +248,10 @@ class KapetaVariableResolver {
 /**
  * Resolves Kapeta variables for a given block - expected to be in "baseDir".
  */
-export async function resolveKapetaVariables(baseDir: string = process.cwd()): Promise<AnyMap> {
-    const configProvider: ConfigProvider = await Config.init(baseDir);
+export async function resolveKapetaVariables(baseDir: string = process.cwd(), configProvider?: ConfigProvider): Promise<AnyMap> {
+    if (!configProvider) {
+        configProvider = await Config.init(baseDir);
+    }
     const resolver = new KapetaVariableResolver(configProvider, baseDir);
 
     return resolver.resolve();

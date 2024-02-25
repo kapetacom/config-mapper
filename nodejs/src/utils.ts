@@ -3,8 +3,8 @@ import FS from 'node:fs/promises';
 import { resolveKapetaVariables } from './variable-resolver';
 import { writeConfigTemplates } from './config-resolver';
 import { spawn } from '@kapeta/nodejs-process';
+import {writeDotEnvFile} from "./dotenv-interpolation";
 
-export const DOTENV_FILE = '.env';
 
 /**
  * Write the Kapeta environment variables to a .env file and write any defined config files
@@ -16,14 +16,7 @@ export const DOTENV_FILE = '.env';
  */
 export async function writeConfig(baseDir: string = process.cwd()) {
     const kapetaVariables = await resolveKapetaVariables(baseDir);
-    let dotEnv = '';
-    Object.entries(kapetaVariables).forEach(([key, value]) => {
-        dotEnv += `${key}=${JSON.stringify(value)}\n`;
-    });
-    const dotEnvPath = Path.join(baseDir, DOTENV_FILE);
-    console.log('Writing environment variables to %s', DOTENV_FILE);
-    await FS.writeFile(dotEnvPath, dotEnv);
-
+    await writeDotEnvFile(kapetaVariables, baseDir);
     await writeConfigTemplates(kapetaVariables, baseDir);
 }
 

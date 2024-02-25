@@ -2,6 +2,10 @@
  * Copyright 2023 Kapeta Inc.
  * SPDX-License-Identifier: MIT
  */
+import Path from "path";
+import FS from "node:fs/promises";
+
+export const DOTENV_FILE = '.env';
 
 // This is mostly copied from:
 // https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
@@ -20,6 +24,9 @@ function resolveEscapeSequences(value: string) {
  * Interpolate variables in a specific value given the data map
  */
 export function interpolateVariablesInValue(value: string, data: Record<string, string>): string {
+    if (!value || !value.replace) {
+        return value;
+    }
     return value.replace(
         DOTENV_SUBSTITUTION_REGEX,
         (match, escaped, dollarSign, openBrace, key, defaultValue, closeBrace) => {
@@ -79,4 +86,15 @@ export function interpolateDotEnv(dotEnv: Record<string, string>, data: Record<s
         output[key] = resolveEscapeSequences(value);
     }
     return output;
+}
+
+
+export async function writeDotEnvFile(kapetaVariables: Record<string, string>, baseDir: string = process.cwd()) {
+    let dotEnv = '';
+    Object.entries(kapetaVariables).forEach(([key, value]) => {
+        dotEnv += `${key}=${JSON.stringify(value)}\n`;
+    });
+    const dotEnvPath = Path.join(baseDir, DOTENV_FILE);
+    console.log('Writing environment variables to %s', DOTENV_FILE);
+    await FS.writeFile(dotEnvPath, dotEnv);
 }

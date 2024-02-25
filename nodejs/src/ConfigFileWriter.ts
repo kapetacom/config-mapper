@@ -16,6 +16,7 @@ export type ConfigFileTemplates = {
  */
 export class ConfigFileWriter {
     private readonly templates: ConfigFileTemplates;
+    private readonly baseDir: string;
 
     /**
      * Expected to be called with the parsed YAML from a kapeta.config.yml file
@@ -27,8 +28,9 @@ export class ConfigFileWriter {
      *  server.port=${PORT}
      *  server.host=${HOST}
      */
-    constructor(templates: ConfigFileTemplates) {
+    constructor(templates: ConfigFileTemplates, baseDir: string = process.cwd()) {
         this.templates = templates;
+        this.baseDir = baseDir;
     }
 
     /**
@@ -50,8 +52,9 @@ export class ConfigFileWriter {
         const entries = Object.entries(rendered);
         for (const [path, value] of entries) {
             console.log(`Writing configuration to ${path}`);
-            await FS.mkdir(Path.dirname(path), { recursive: true });
-            await FS.writeFile(path, value);
+            const fullPath = Path.join(this.baseDir, path);
+            await FS.mkdir(Path.dirname(fullPath), { recursive: true });
+            await FS.writeFile(fullPath, value);
         }
     }
 

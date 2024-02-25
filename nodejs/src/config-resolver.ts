@@ -24,6 +24,16 @@ export async function readConfigTemplates(baseDir: string = process.cwd()): Prom
 }
 
 /**
+ * Gets the paths of the configuration templates from the kapeta.config.yml file
+ */
+export async function getConfigTemplatePaths(
+    baseDir: string = process.cwd()
+): Promise<string[]> {
+    const templates = await readConfigTemplates(baseDir);
+    return Object.keys(templates);
+}
+
+/**
  * Renders the configuration templates from the kapeta.config.yml file in-memory
  */
 export async function renderConfigTemplates(
@@ -31,7 +41,7 @@ export async function renderConfigTemplates(
     baseDir: string = process.cwd()
 ): Promise<Record<string, string>> {
     const templates = await readConfigTemplates(baseDir);
-    const writer = new ConfigFileWriter(templates);
+    const writer = new ConfigFileWriter(templates, baseDir);
 
     return writer.render(data);
 }
@@ -41,7 +51,7 @@ export async function renderConfigTemplates(
  */
 export async function writeConfigTemplates(data: Record<string, string>, baseDir: string = process.cwd()) {
     const templates = await readConfigTemplates(baseDir);
-    const writer = new ConfigFileWriter(templates);
+    const writer = new ConfigFileWriter(templates, baseDir);
 
     await writer.write(data);
 }
