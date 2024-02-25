@@ -4,4 +4,5 @@
  */
 
 export * from './src/environment';
+export * from './src/dotenv-interpolation';
 export * from './src/ConfigFileWriter';

@@ -1,4 +1,3 @@
-
 export type EnvVarMap = { [key: string]: string | undefined };
 
 export function getKapetaEnvVars(processEnvVars: EnvVarMap = process.env): EnvVarMap {
@@ -7,7 +6,7 @@ export function getKapetaEnvVars(processEnvVars: EnvVarMap = process.env): EnvVa
         if (key.startsWith('KAPETA_')) {
             envVars[key] = value;
         }
-    })
+    });
 
     return envVars;
 }
@@ -62,12 +61,12 @@ export function explodeEnvVars(processEnvVars: EnvVarMap = process.env): EnvVarM
     return exploded;
 }
 
-function flattenObject(obj: EnvVarMap, prefix:string = ''): EnvVarMap {
+function flattenObject(obj: EnvVarMap, prefix: string = ''): EnvVarMap {
     const flattened: EnvVarMap = {};
     Object.entries(obj).forEach(([key, value]) => {
         const fullKey = (prefix + toEnvVarName(key)).toUpperCase();
         if (typeof value === 'object') {
-            const childPrefix = `${fullKey}_`
+            const childPrefix = `${fullKey}_`;
             const flattenedChild = flattenObject(value as EnvVarMap, childPrefix);
             Object.assign(flattened, flattenedChild);
         } else {
