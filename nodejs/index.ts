@@ -6,3 +6,5 @@
 export * from './src/environment';
 export * from './src/dotenv-interpolation';
 export * from './src/ConfigFileWriter';
+export * from './src/config-resolver';
+export * from './src/variable-resolver';

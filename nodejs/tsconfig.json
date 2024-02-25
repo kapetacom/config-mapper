@@ -3,7 +3,8 @@
     "compilerOptions": {
         "outDir": "./dist",
         "declaration": true,
-        "strict": true
+        "strict": true,
+        "rootDir": "./"
     },
     "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }
