@@ -1,0 +1,18 @@
+name: Check License Headers
+
+on: [push]
+
+jobs:
+  check-license:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Check License Headers
+        uses: kapetacom/check-license-action@master
+        with:
+          holder: 'Kapeta Inc.'
+          license: 'MIT'
+          sources: 'src/**/* test/**/* schemas/**/*  packages/go/validate*.go packages/maven/**/Schemas.java packages/npm/src/*.ts  packages/npm/test/**/*'
+
