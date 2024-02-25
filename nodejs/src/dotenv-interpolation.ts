@@ -9,10 +9,16 @@
 const DOTENV_SUBSTITUTION_REGEX =
     /(\\)?(\$)(?!\()(\{?)([\w.]+)(?::?-((?:\$\{(?:\$\{(?:\$\{[^}]*}|[^}])*}|[^}])*}|[^}])+))?(}?)/gi;
 
+/**
+ * Resolve escape sequences in a value (e.g. \$ -> $)
+ */
 function resolveEscapeSequences(value: string) {
     return value.replace(/\\\$/g, '$');
 }
 
+/**
+ * Interpolate variables in a specific value given the data map
+ */
 export function interpolateVariablesInValue(value: string, data: Record<string, string>): string {
     return value.replace(
         DOTENV_SUBSTITUTION_REGEX,
@@ -44,6 +50,9 @@ export function interpolateVariablesInValue(value: string, data: Record<string, 
     );
 }
 
+/**
+ * Interpolate properties in a data map
+ */
 export function interpolateVariables(data: Record<string, string>) {
     const output: Record<string, string> = {};
     for (const key in data) {
@@ -54,6 +63,9 @@ export function interpolateVariables(data: Record<string, string>) {
     return output;
 }
 
+/**
+ * Interpolate variables for the output of a dotenv file with both dotenv and data variables
+ */
 export function interpolateDotEnv(dotEnv: Record<string, string>, data: Record<string, string>) {
     const output: Record<string, string> = {
         ...data,

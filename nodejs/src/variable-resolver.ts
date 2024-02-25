@@ -4,30 +4,36 @@
  */
 
 import FS from 'node:fs/promises';
+import Path from 'node:path';
+import dotenv from 'dotenv';
 import { BlockDefinition, Plan, Resource } from '@kapeta/schemas';
 import Config, { ConfigProvider } from '@kapeta/sdk-config';
 import ClusterConfiguration, { DefinitionInfo, Definition } from '@kapeta/local-cluster-config';
 import { parseKapetaUri, KapetaURI } from '@kapeta/nodejs-utils';
-
-import dotenv from 'dotenv';
-import Path from 'path';
 import { explodeEnvVars, toEnvVarName } from './environment';
 import { interpolateDotEnv } from './dotenv-interpolation';
 
+// The core types we're particularly interested in. TODO: These should be defined elsewhere.
 export const RESOURCE_TYPE_INTERNAL = 'core/resource-type-internal';
 export const RESOURCE_TYPE_OPERATOR = 'core/resource-type-operator';
 export const BLOCK_TYPE_OPERATOR = 'core/block-type-operator';
+
+// The types of ports we support as a host type. TODO: This should be defined elsewhere.
 export const HOST_PORT_TYPES = ['rest', 'grpc', 'http', 'web'];
 
+// A few standard Kapeta environment variables. TODO: These should be defined elsewhere.
 export const KAPETA_SYSTEM_TYPE = 'KAPETA_SYSTEM_TYPE';
 export const KAPETA_SYSTEM_ID = 'KAPETA_SYSTEM_ID';
 export const KAPETA_BLOCK_REF = 'KAPETA_BLOCK_REF';
 export const KAPETA_INSTANCE_ID = 'KAPETA_INSTANCE_ID';
 export const KAPETA_PROVIDER_HOST = 'KAPETA_PROVIDER_HOST';
 
-type AnyMap<T = any> = { [key: string]: T };
-
+/**
+ * The name of the dotenv configuration file
+ */
 export const KAPETA_DOTENV_FILE = 'kapeta.config.env';
+
+type AnyMap<T = any> = { [key: string]: T };
 
 const uriMapper = (p: DefinitionInfo) => {
     const uri = parseKapetaUri(p.definition.metadata.name + ':' + p.version);
@@ -37,6 +43,12 @@ const uriMapper = (p: DefinitionInfo) => {
     };
 };
 
+/**
+ * Resolves Kapeta variables for a given block
+ *
+ * The variables are basically environment variables that are used to configure the block,
+ * but they are also used for creating configuration files
+ */
 class KapetaVariableResolver {
     private readonly configProvider: ConfigProvider;
     private readonly definitions: { definition: Definition; uri: KapetaURI }[];
@@ -233,6 +245,9 @@ class KapetaVariableResolver {
     }
 }
 
+/**
+ * Resolves Kapeta variables for a given block - expected to be in "baseDir".
+ */
 export async function resolveKapetaVariables(baseDir: string = process.cwd()): Promise<AnyMap> {
     const configProvider: ConfigProvider = await Config.init(baseDir);
     const resolver = new KapetaVariableResolver(configProvider, baseDir);

@@ -6,6 +6,14 @@ import { spawn } from '@kapeta/nodejs-process';
 
 export const DOTENV_FILE = '.env';
 
+/**
+ * Write the Kapeta environment variables to a .env file and write any defined config files
+ *
+ * This will look for a kapeta.config.yml file in the base directory and use it to render the config files
+ *
+ * It will also look for a kapeta.config.env file in the base directory and use it to render the .env file
+ *
+ */
 export async function writeConfig(baseDir: string = process.cwd()) {
     const kapetaVariables = await resolveKapetaVariables(baseDir);
     let dotEnv = '';
@@ -19,7 +27,14 @@ export async function writeConfig(baseDir: string = process.cwd()) {
     await writeConfigTemplates(kapetaVariables, baseDir);
 }
 
-export async function runWithConfig(cmd: string, args: string[] = [], baseDir: string = process.cwd()): Promise<ReturnType<typeof spawn>> {
+/**
+ * Run a command with the resolved Kapeta environment variables
+ */
+export async function runWithConfig(
+    cmd: string,
+    args: string[] = [],
+    baseDir: string = process.cwd()
+): Promise<ReturnType<typeof spawn>> {
     const kapetaVariables = await resolveKapetaVariables(baseDir);
     return spawn(cmd, args, {
         env: {

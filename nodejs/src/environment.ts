@@ -1,9 +1,14 @@
 export type EnvVarMap = { [key: string]: string | undefined };
 
+export const KAPETA_ENV_PREFIX = 'KAPETA_';
+
+/**
+ * Get all environment variables that start with KAPETA_
+ */
 export function getKapetaEnvVars(processEnvVars: EnvVarMap = process.env): EnvVarMap {
     const envVars: EnvVarMap = {};
     Object.entries(processEnvVars).forEach(([key, value]) => {
-        if (key.startsWith('KAPETA_')) {
+        if (key.startsWith(KAPETA_ENV_PREFIX)) {
             envVars[key] = value;
         }
     });
@@ -51,6 +56,16 @@ export function explodeEnvValue(key: string, value: string): EnvVarMap {
     return envVars;
 }
 
+/**
+ * Explode all environment variables into a set of environment variables if they are JSON objects or arrays.
+ *
+ * For example:
+ * SOME_KEY='{"a": 1, "b": 2}'
+ * becomes:
+ * - SOME_KEY='{"a": 1, "b": 2}'
+ * - SOME_KEY_A=1
+ * - SOME_KEY_B=2
+ */
 export function explodeEnvVars(processEnvVars: EnvVarMap = process.env): EnvVarMap {
     const exploded: EnvVarMap = {};
     Object.entries(processEnvVars).forEach(([key, value]) => {
@@ -77,6 +92,9 @@ function flattenObject(obj: EnvVarMap, prefix: string = ''): EnvVarMap {
     return flattened;
 }
 
+/**
+ * Convert a string to an environment variable friendly name
+ */
 export function toEnvVarName(key: string) {
     return key
         .replace(/([a-z])([A-Z])/g, '$1_$2')
