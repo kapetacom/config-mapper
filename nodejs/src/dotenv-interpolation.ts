@@ -2,8 +2,8 @@
  * Copyright 2023 Kapeta Inc.
  * SPDX-License-Identifier: MIT
  */
-import Path from "path";
-import FS from "node:fs/promises";
+import Path from 'path';
+import FS from 'node:fs/promises';
 
 export const DOTENV_FILE = '.env';
 
@@ -87,7 +87,6 @@ export function interpolateDotEnv(dotEnv: Record<string, string>, data: Record<s
     }
     return output;
 }
-
 
 export async function writeDotEnvFile(kapetaVariables: Record<string, string>, baseDir: string = process.cwd()) {
     let dotEnv = '';

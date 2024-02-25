@@ -248,7 +248,10 @@ export class KapetaVariableResolver {
 /**
  * Resolves Kapeta variables for a given block - expected to be in "baseDir".
  */
-export async function resolveKapetaVariables(baseDir: string = process.cwd(), configProvider?: ConfigProvider): Promise<AnyMap> {
+export async function resolveKapetaVariables(
+    baseDir: string = process.cwd(),
+    configProvider?: ConfigProvider
+): Promise<AnyMap> {
     if (!configProvider) {
         configProvider = await Config.init(baseDir);
     }

@@ -26,9 +26,7 @@ export async function readConfigTemplates(baseDir: string = process.cwd()): Prom
 /**
  * Gets the paths of the configuration templates from the kapeta.config.yml file
  */
-export async function getConfigTemplatePaths(
-    baseDir: string = process.cwd()
-): Promise<string[]> {
+export async function getConfigTemplatePaths(baseDir: string = process.cwd()): Promise<string[]> {
     const templates = await readConfigTemplates(baseDir);
     return Object.keys(templates);
 }

@@ -3,8 +3,7 @@ import FS from 'node:fs/promises';
 import { resolveKapetaVariables } from './variable-resolver';
 import { writeConfigTemplates } from './config-resolver';
 import { spawn } from '@kapeta/nodejs-process';
-import {writeDotEnvFile} from "./dotenv-interpolation";
-
+import { writeDotEnvFile } from './dotenv-interpolation';
 
 /**
  * Write the Kapeta environment variables to a .env file and write any defined config files
