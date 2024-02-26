@@ -1,4 +1,4 @@
-import { interpolateVariables, interpolateVariablesInValue } from './dotenv-interpolation';
+import { interpolateVariables, interpolateVariablesInValue } from '../src/dotenv-interpolation';
 
 describe('dotenv-interpolation', () => {
     it('can interpolate values in a string', () => {

@@ -2,6 +2,7 @@ import Path from 'path';
 import FS from 'node:fs/promises';
 import YAML from 'yaml';
 import { ConfigFileTemplates, ConfigFileWriter } from './ConfigFileWriter';
+import { getEmbeddedConfig } from './utils';
 
 /**
  * The name of the configuration file
@@ -16,7 +17,10 @@ export async function readConfigTemplates(baseDir: string = process.cwd()): Prom
     try {
         await FS.access(configPath, FS.constants.F_OK);
     } catch (e) {
-        // File does not exist
+        const embeddedConfig = await getEmbeddedConfig(KAPETA_CONFIG_FILE, baseDir);
+        if (embeddedConfig) {
+            return YAML.parse(embeddedConfig.content.value) as ConfigFileTemplates;
+        }
         return {};
     }
     const rawYaml = await FS.readFile(configPath, 'utf-8');
