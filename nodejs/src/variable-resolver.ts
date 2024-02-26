@@ -3,17 +3,14 @@
  * SPDX-License-Identifier: MIT
  */
 
-import FS from 'node:fs/promises';
-import Path from 'node:path';
 import dotenv from 'dotenv';
 import { BlockDefinition, Plan, Resource } from '@kapeta/schemas';
-import Config, { ConfigProvider } from '@kapeta/sdk-config';
+import Config, {ConfigProvider, InstanceOperator, LocalConfigProvider, ResourceInfo} from '@kapeta/sdk-config';
 import ClusterConfiguration, { DefinitionInfo, Definition } from '@kapeta/local-cluster-config';
 import { parseKapetaUri, KapetaURI } from '@kapeta/nodejs-utils';
 import { explodeEnvVars, toEnvVarName } from './environment';
 import { interpolateDotEnv } from './dotenv-interpolation';
-import { readConfigContent, getAttachmentFromKapetaYML } from './utils';
-import { readAttachmentContent } from './attachments';
+import { readConfigContent } from './utils';
 
 // The core types we're particularly interested in. TODO: These should be defined elsewhere.
 export const RESOURCE_TYPE_INTERNAL = 'core/resource-type-internal';
@@ -168,7 +165,13 @@ export class KapetaVariableResolver {
 
         if (blockProvider.definition.kind === BLOCK_TYPE_OPERATOR) {
             try {
-                const instance = await this.configProvider.getInstanceOperator(instanceId);
+                let instance:InstanceOperator<any, any>|null;
+                if (this.configProvider instanceof LocalConfigProvider) {
+                    instance = await this.configProvider.getInstanceOperator(instanceId, false);
+                } else {
+                    instance = await this.configProvider.getInstanceOperator(instanceId);
+                }
+
                 if (instance) {
                     out[`KAPETA_INSTANCE_OPERATOR_${toEnvVarName(instanceId)}`] = JSON.stringify(instance);
                 }
@@ -208,7 +211,12 @@ export class KapetaVariableResolver {
         }
 
         if (RESOURCE_TYPE_OPERATOR === resourceType.definition.kind) {
-            const resourceInfo = await this.configProvider.getResourceInfo(kindUri.fullName, portType, name);
+            let resourceInfo:ResourceInfo<any, any>|null;
+            if (this.configProvider instanceof LocalConfigProvider) {
+                resourceInfo = await this.configProvider.getResourceInfo(kindUri.fullName, portType, name, false);
+            } else {
+                resourceInfo = await this.configProvider.getResourceInfo(kindUri.fullName, portType, name);
+            }
             if (resourceInfo) {
                 out[`KAPETA_CONSUMER_RESOURCE_${toEnvVarName(name)}_${toEnvVarName(portType)}`] =
                     JSON.stringify(resourceInfo);

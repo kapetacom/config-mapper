@@ -28,13 +28,13 @@ describe('ConfigFileWriter', () => {
         expect(() => configFile.renderTemplate('/not/real', data)).toThrow('Template not found: /not/real');
     });
 
-    it('throws if attempting to render with missing variable', () => {
+    it('will return a string if attempting to render with missing variable', () => {
         const configFile = new ConfigFileWriter({
             '/tmp/foo': 'Hello ${FOO}',
         });
 
         const data = {};
 
-        expect(() => configFile.renderTemplate('/tmp/foo', data)).toThrow('Data not found for key: FOO');
+        expect(configFile.renderTemplate('/tmp/foo', data)).toBe('Hello ');
     });
 });

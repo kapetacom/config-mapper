@@ -51,7 +51,9 @@ export function interpolateVariablesInValue(value: string, data: Record<string, 
                     }
                 }
 
-                throw new Error(`Data not found for key: ${key}`);
+                console.warn(`Data not found for key: ${key}`);
+
+                return '';
             }
         }
     );
