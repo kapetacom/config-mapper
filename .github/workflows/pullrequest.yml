@@ -1,16 +1,13 @@
 name: Pull request
 on:
-  pull_request:
+  - pull_request
+  - push
 jobs:
-
   build-node:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          registry-url: https://registry.npmjs.org/
       - name: 'Install npm'
         run: npm ci
         working-directory: ./nodejs
