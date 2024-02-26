@@ -7,7 +7,7 @@ import { writeDotEnvFile } from './dotenv-interpolation';
 import { ConfigFileTemplates } from './ConfigFileWriter';
 import YAML from 'yaml';
 import { Attachment, Kind } from '@kapeta/schemas';
-import {getAttachment} from "./attachments";
+import { getAttachment, readAttachmentContent } from './attachments';
 
 export const KAPETA_YML = 'kapeta.yml';
 
@@ -26,9 +26,33 @@ export async function readKapetaYML(baseDir: string = process.cwd()): Promise<Ki
 /**
  * Get the embedded attachment from the kapeta.yml file
  */
-export async function getEmbeddedConfig(filename: string, baseDir: string = process.cwd()): Promise<Attachment | null> {
+export async function getAttachmentFromKapetaYML(
+    filename: string,
+    baseDir: string = process.cwd()
+): Promise<Attachment | null> {
     const kapetaYML = await readKapetaYML(baseDir);
     return getAttachment(kapetaYML, filename);
+}
+
+/**
+ * Read the content of a config file. If the file does not exist, it will look for an embedded attachment
+ * in the kapeta.yml file
+ *
+ * Returns the parsed content of the file or null if the file does not exist
+ */
+export async function readConfigContent(filename: string, baseDir: string = process.cwd()): Promise<string | null> {
+    const configPath = Path.join(baseDir, filename);
+    try {
+        await FS.access(configPath, FS.constants.F_OK);
+    } catch (e) {
+        const embeddedConfig = await getAttachmentFromKapetaYML(filename, baseDir);
+        if (embeddedConfig) {
+            const content = await readAttachmentContent(embeddedConfig.content.format, embeddedConfig.content.value);
+            return content.toString();
+        }
+        return null;
+    }
+    return await FS.readFile(configPath, 'utf-8');
 }
 
 /**

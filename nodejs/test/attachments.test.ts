@@ -47,7 +47,7 @@ describe('attachments', () => {
         ).toBe('https://kapeta.com/robots.txt');
         expect(await writeAttachmentContent(AttachmentContentFormat.Base64, valueBuf)).toEqual('dmFsdWU=');
         expect(await writeAttachmentContent(AttachmentContentFormat.Base64Gzip, valueBuf)).toEqual(
-            'H4sIAAAAAAAAEytLzClNBQA0WHcdBQAAAA=='
+            'H4sIAAAAAAACEytLzClNBQA0WHcdBQAAAA=='
         );
     });
 
@@ -57,7 +57,7 @@ describe('attachments', () => {
         expect(await readAttachmentContent(AttachmentContentFormat.URL, 'https://kapeta.com/robots.txt')).toBeDefined();
         expect(await readAttachmentContent(AttachmentContentFormat.Base64, 'dmFsdWU=')).toEqual(valueBuf);
         expect(
-            await readAttachmentContent(AttachmentContentFormat.Base64Gzip, 'H4sIAAAAAAAAEytLzClNBQA0WHcdBQAAAA==')
+            await readAttachmentContent(AttachmentContentFormat.Base64Gzip, 'H4sIAAAAAAACEytLzClNBQA0WHcdBQAAAA==')
         ).toEqual(valueBuf);
     });
 
@@ -68,7 +68,7 @@ describe('attachments', () => {
         expect(attachment.filename).toBe('test.txt');
         expect(attachment.contentType).toBe('text/plain');
         expect(attachment.content.format).toBe(AttachmentContentFormat.Base64Gzip);
-        expect(attachment.content.value).toBe('H4sIAAAAAAAAEytLzClNBQA0WHcdBQAAAA==');
+        expect(attachment.content.value).toBe('H4sIAAAAAAACEytLzClNBQA0WHcdBQAAAA==');
     });
 
     it('can create attachment from file in specific format', async () => {

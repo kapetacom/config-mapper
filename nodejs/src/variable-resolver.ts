@@ -12,6 +12,8 @@ import ClusterConfiguration, { DefinitionInfo, Definition } from '@kapeta/local-
 import { parseKapetaUri, KapetaURI } from '@kapeta/nodejs-utils';
 import { explodeEnvVars, toEnvVarName } from './environment';
 import { interpolateDotEnv } from './dotenv-interpolation';
+import { readConfigContent, getAttachmentFromKapetaYML } from './utils';
+import { readAttachmentContent } from './attachments';
 
 // The core types we're particularly interested in. TODO: These should be defined elsewhere.
 export const RESOURCE_TYPE_INTERNAL = 'core/resource-type-internal';
@@ -114,15 +116,10 @@ export class KapetaVariableResolver {
     }
 
     private async resolveMappings(envVars: AnyMap<string>) {
-        const dotEnvPath = Path.join(this.baseDir, KAPETA_DOTENV_FILE);
-        try {
-            await FS.access(dotEnvPath, FS.constants.F_OK);
-        } catch (e) {
-            // File does not exist
+        const dotEnvRaw = await readConfigContent(KAPETA_DOTENV_FILE, this.baseDir);
+        if (!dotEnvRaw) {
             return envVars;
         }
-
-        const dotEnvRaw = await FS.readFile(dotEnvPath, 'utf-8');
 
         const parsed = dotenv.parse(dotEnvRaw);
         return interpolateDotEnv(parsed, envVars);
