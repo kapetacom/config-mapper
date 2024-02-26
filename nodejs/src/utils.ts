@@ -1,13 +1,18 @@
 import Path from 'path';
 import FS from 'node:fs/promises';
 import { resolveKapetaVariables } from './variable-resolver';
-import { KAPETA_CONFIG_FILE, writeConfigTemplates } from './config-resolver';
+import { writeConfigTemplates } from './config-resolver';
 import { spawn } from '@kapeta/nodejs-process';
 import { writeDotEnvFile } from './dotenv-interpolation';
-import { ConfigFileTemplates } from './ConfigFileWriter';
+
 import YAML from 'yaml';
 import { Attachment, Kind } from '@kapeta/schemas';
 import { getAttachment, readAttachmentContent } from './attachments';
+import zlib from 'node:zlib';
+import util from 'node:util';
+
+const gzip = util.promisify(zlib.gzip);
+const gunzip = util.promisify(zlib.gunzip);
 
 export const KAPETA_YML = 'kapeta.yml';
 
@@ -86,4 +91,18 @@ export async function runWithConfig(
         stdio: 'pipe',
         shell: true,
     });
+}
+
+export async function unpack(value: string): Promise<Buffer> {
+    const gzipped = Buffer.from(value, 'base64');
+    return await gunzip(gzipped, {
+        level: zlib.constants.Z_BEST_COMPRESSION,
+    });
+}
+
+export async function pack(content: Buffer): Promise<string> {
+    const gzipped = await gzip(content, {
+        level: zlib.constants.Z_BEST_COMPRESSION,
+    });
+    return gzipped.toString('base64');
 }

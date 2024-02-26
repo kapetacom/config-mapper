@@ -1,11 +1,7 @@
 import { Attachment, AttachmentContentFormat, Kind } from '@kapeta/schemas';
-import * as zlib from 'node:zlib';
-import * as util from 'node:util';
 import * as Path from 'node:path';
 import * as FS from 'node:fs/promises';
-
-const gzip = util.promisify(zlib.gzip);
-const gunzip = util.promisify(zlib.gunzip);
+import { pack, unpack } from './utils';
 
 export function getAttachment(kind: Kind, filename: string) {
     if (!kind.attachments) {
@@ -43,10 +39,7 @@ export async function readAttachmentContent(format: AttachmentContentFormat, val
         case AttachmentContentFormat.Plain:
             return Buffer.from(value, 'utf-8');
         case AttachmentContentFormat.Base64Gzip:
-            const gzipped = Buffer.from(value, 'base64');
-            return await gunzip(gzipped, {
-                level: zlib.constants.Z_BEST_COMPRESSION,
-            });
+            return unpack(value);
         case AttachmentContentFormat.URL:
             return fetch(value)
                 .then((res) => res.arrayBuffer())
@@ -89,10 +82,7 @@ export async function writeAttachmentContent(format: AttachmentContentFormat, co
         case AttachmentContentFormat.Plain:
             return content.toString();
         case AttachmentContentFormat.Base64Gzip:
-            const gzipped = await gzip(content, {
-                level: zlib.constants.Z_BEST_COMPRESSION,
-            });
-            return gzipped.toString('base64');
+            return pack(content);
         case AttachmentContentFormat.URL:
             return content.toString();
     }

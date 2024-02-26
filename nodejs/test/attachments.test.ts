@@ -8,6 +8,7 @@ import {
     writeAttachmentContent,
 } from '../src/attachments';
 import { AttachmentContentFormat } from '@kapeta/schemas';
+import { unpack } from '../src/utils';
 
 const SimpleKind = {
     kind: 'kind',
@@ -46,9 +47,9 @@ describe('attachments', () => {
             await writeAttachmentContent(AttachmentContentFormat.URL, Buffer.from('https://kapeta.com/robots.txt'))
         ).toBe('https://kapeta.com/robots.txt');
         expect(await writeAttachmentContent(AttachmentContentFormat.Base64, valueBuf)).toEqual('dmFsdWU=');
-        expect(await writeAttachmentContent(AttachmentContentFormat.Base64Gzip, valueBuf)).toEqual(
-            'H4sIAAAAAAACEytLzClNBQA0WHcdBQAAAA=='
-        );
+        expect(
+            (await unpack(await writeAttachmentContent(AttachmentContentFormat.Base64Gzip, valueBuf))).toString()
+        ).toEqual('value');
     });
 
     it('can read attachment content', async () => {
@@ -68,7 +69,7 @@ describe('attachments', () => {
         expect(attachment.filename).toBe('test.txt');
         expect(attachment.contentType).toBe('text/plain');
         expect(attachment.content.format).toBe(AttachmentContentFormat.Base64Gzip);
-        expect(attachment.content.value).toBe('H4sIAAAAAAACEytLzClNBQA0WHcdBQAAAA==');
+        expect((await unpack(attachment.content.value)).toString()).toBe('value');
     });
 
     it('can create attachment from file in specific format', async () => {
