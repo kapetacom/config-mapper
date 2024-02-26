@@ -2,6 +2,7 @@ import Path from 'path';
 import FS from 'node:fs/promises';
 import YAML from 'yaml';
 import { ConfigFileTemplates, ConfigFileWriter } from './ConfigFileWriter';
+import { getAttachmentFromKapetaYML, readConfigContent } from './utils';
 
 /**
  * The name of the configuration file
@@ -12,14 +13,10 @@ export const KAPETA_CONFIG_FILE = 'kapeta.config.yml';
  * Reads the configuration templates from the kapeta.config.yml file
  */
 export async function readConfigTemplates(baseDir: string = process.cwd()): Promise<ConfigFileTemplates> {
-    const configPath = Path.join(baseDir, KAPETA_CONFIG_FILE);
-    try {
-        await FS.access(configPath, FS.constants.F_OK);
-    } catch (e) {
-        // File does not exist
+    const rawYaml = await readConfigContent(KAPETA_CONFIG_FILE, baseDir);
+    if (!rawYaml) {
         return {};
     }
-    const rawYaml = await FS.readFile(configPath, 'utf-8');
     return YAML.parse(rawYaml);
 }
 

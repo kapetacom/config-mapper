@@ -1,4 +1,4 @@
-import { explodeEnvValue, getKapetaEnvVars, toEnvVarName } from './environment';
+import { explodeEnvValue, getKapetaEnvVars, toEnvVarName } from '../src/environment';
 
 describe('environment', () => {
     it('can filter out all kapeta env vars from map', () => {

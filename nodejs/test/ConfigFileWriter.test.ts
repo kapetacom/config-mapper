@@ -1,4 +1,4 @@
-import { ConfigFileWriter } from './ConfigFileWriter';
+import { ConfigFileWriter } from '../src/ConfigFileWriter';
 
 describe('ConfigFileWriter', () => {
     it('can render multiple templates', () => {
