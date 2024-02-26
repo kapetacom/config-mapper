@@ -1,0 +1,10 @@
+{
+    "extends": "@tsconfig/node18/tsconfig.json",
+    "compilerOptions": {
+        "outDir": "./dist",
+        "declaration": true,
+        "strict": true,
+        "rootDir": "./"
+    },
+    "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}

@@ -1,0 +1,26 @@
+name: Publish to Kapeta Public Repos
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+
+      - run: npm ci
+        working-directory: ./nodejs
+      - run: npm run build
+        working-directory: ./nodejs
+      - run: npm run test
+        working-directory: ./nodejs
+      - run: npm publish --access public
+        working-directory: ./nodejs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
