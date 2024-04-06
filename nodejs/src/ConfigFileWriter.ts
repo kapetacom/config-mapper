@@ -1,6 +1,7 @@
 import FS from 'node:fs/promises';
 import { interpolateVariablesInValue } from './dotenv-interpolation';
 import * as Path from 'path';
+import {Variables} from "./variable-resolver";
 
 export type ConfigFileTemplates = {
     [path: string]: string;
@@ -36,7 +37,7 @@ export class ConfigFileWriter {
     /**
      * Renders the configuration in-memory for the provided data
      */
-    public render(data: Record<string, string>) {
+    public render(data: Variables) {
         const rendered: { [path: string]: string } = {};
         for (const path in this.templates) {
             rendered[path] = this.renderTemplate(path, data);
@@ -47,7 +48,7 @@ export class ConfigFileWriter {
     /**
      * Writes the rendered configuration to the file system for the provided data
      */
-    public async write(data: Record<string, string>) {
+    public async write(data: Variables) {
         const rendered = this.render(data);
         const entries = Object.entries(rendered);
         for (const [path, value] of entries) {
@@ -61,7 +62,7 @@ export class ConfigFileWriter {
     /**
      * Renders a single template
      */
-    public renderTemplate(path: string, data: Record<string, string>): string {
+    public renderTemplate(path: string, data: Variables): string {
         if (!(path in this.templates)) {
             throw new Error(`Template not found: ${path}`);
         }

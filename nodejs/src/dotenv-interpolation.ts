@@ -4,6 +4,7 @@
  */
 import Path from 'path';
 import FS from 'node:fs/promises';
+import {toMappedVar, VariableInfo, Variables} from "./variable-resolver";
 
 export const DOTENV_FILE = '.env';
 
@@ -23,10 +24,11 @@ function resolveEscapeSequences(value: string) {
 /**
  * Interpolate variables in a specific value given the data map
  */
-export function interpolateVariablesInValue(value: string, data: Record<string, string>): string {
+export function interpolateVariablesInValue(value: string, data: Variables): string {
     if (!value || !value.replace) {
         return value;
     }
+
     return value.replace(
         DOTENV_SUBSTITUTION_REGEX,
         (match, escaped, dollarSign, openBrace, key, defaultValue, closeBrace) => {
@@ -35,11 +37,11 @@ export function interpolateVariablesInValue(value: string, data: Record<string, 
             } else {
                 if (data[key]) {
                     // avoid recursion from EXPAND_SELF=$EXPAND_SELF
-                    if (data[key] === value) {
+                    if (data[key].value === value) {
                         return data[key];
                     } else {
                         // scenario: PASSWORD_EXPAND_NESTED=${PASSWORD_EXPAND}
-                        return interpolateVariablesInValue(data[key], data);
+                        return interpolateVariablesInValue(data[key].value, data);
                     }
                 }
 
@@ -57,17 +59,19 @@ export function interpolateVariablesInValue(value: string, data: Record<string, 
             }
         }
     );
+
 }
 
 /**
  * Interpolate properties in a data map
  */
-export function interpolateVariables(data: Record<string, string>) {
-    const output: Record<string, string> = {};
+export function interpolateVariables(data: Variables) {
+    const output: Variables = {};
     for (const key in data) {
-        let value = data[key];
-        value = interpolateVariablesInValue(value, data);
-        output[key] = resolveEscapeSequences(value);
+        let variable = data[key];
+        variable.value = interpolateVariablesInValue(variable.value, data);
+        variable.value = resolveEscapeSequences(variable.value);
+        output[key] = variable;
     }
     return output;
 }
@@ -75,27 +79,42 @@ export function interpolateVariables(data: Record<string, string>) {
 /**
  * Interpolate variables for the output of a dotenv file with both dotenv and data variables
  */
-export function interpolateDotEnv(dotEnv: Record<string, string>, data: Record<string, string>) {
-    const output: Record<string, string> = {
+export function interpolateDotEnv(dotEnv: Variables, data: Variables) {
+    const output: Variables = {
         ...data,
     };
     for (const key in dotEnv) {
-        let value = dotEnv[key];
-        value = interpolateVariablesInValue(value, {
+        let variable = dotEnv[key];
+        const value = interpolateVariablesInValue(variable.value, {
             ...output,
             ...dotEnv,
         });
-        output[key] = resolveEscapeSequences(value);
+        output[key] = toMappedVar(resolveEscapeSequences(value));
     }
     return output;
 }
 
-export async function writeDotEnvFile(kapetaVariables: Record<string, string>, baseDir: string = process.cwd()) {
+export async function writeEnvConfigFile(kapetaVariables: Variables, path:string) {
+    let values : Record<string,string> = {};
+    Object.entries(kapetaVariables).forEach(([key, value]) => {
+        values[key] = value.value
+    });
+
+    console.log('Writing config variables to %s', path);
+    const baseDir = Path.dirname(path);
+    await FS.mkdir(baseDir, {recursive: true});
+    await FS.writeFile(path, JSON.stringify(values));
+}
+
+
+export async function writeDotEnvFile(kapetaVariables: Variables, baseDir: string = process.cwd(), filename = DOTENV_FILE) {
     let dotEnv = '';
     Object.entries(kapetaVariables).forEach(([key, value]) => {
-        dotEnv += `${key}=${JSON.stringify(value)}\n`;
+        dotEnv += `${key}=${JSON.stringify(value.value)}\n`;
     });
-    const dotEnvPath = Path.join(baseDir, DOTENV_FILE);
-    console.log('Writing environment variables to %s', DOTENV_FILE);
+    const dotEnvPath = Path.join(baseDir, filename);
+    console.log('Writing environment variables to %s', filename);
     await FS.writeFile(dotEnvPath, dotEnv);
+
+    return dotEnvPath;
 }

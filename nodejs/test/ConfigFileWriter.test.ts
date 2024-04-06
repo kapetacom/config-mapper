@@ -1,4 +1,5 @@
 import { ConfigFileWriter } from '../src/ConfigFileWriter';
+import {toEnvVar} from "../src/variable-resolver";
 
 describe('ConfigFileWriter', () => {
     it('can render multiple templates', () => {
@@ -7,8 +8,8 @@ describe('ConfigFileWriter', () => {
             '/tmp/bar': 'Goodbye ${BAR}',
         });
         const data = {
-            FOO: 'World',
-            BAR: 'Cruel World',
+            FOO: toEnvVar('World'),
+            BAR: toEnvVar('Cruel World'),
         };
         const rendered = configFile.render(data);
         expect(rendered).toEqual({

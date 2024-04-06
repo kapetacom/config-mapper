@@ -3,6 +3,7 @@ import FS from 'node:fs/promises';
 import YAML from 'yaml';
 import { ConfigFileTemplates, ConfigFileWriter } from './ConfigFileWriter';
 import { getAttachmentFromKapetaYML, readConfigContent } from './utils';
+import {Variables} from "./variable-resolver";
 
 /**
  * The name of the configuration file
@@ -32,7 +33,7 @@ export async function getConfigTemplatePaths(baseDir: string = process.cwd()): P
  * Renders the configuration templates from the kapeta.config.yml file in-memory
  */
 export async function renderConfigTemplates(
-    data: Record<string, string>,
+    data: Variables,
     baseDir: string = process.cwd()
 ): Promise<Record<string, string>> {
     const templates = await readConfigTemplates(baseDir);
@@ -44,7 +45,7 @@ export async function renderConfigTemplates(
 /**
  * Writes the configuration templates from the kapeta.config.yml file to the file system
  */
-export async function writeConfigTemplates(data: Record<string, string>, baseDir: string = process.cwd()) {
+export async function writeConfigTemplates(data: Variables, baseDir: string = process.cwd()) {
     const templates = await readConfigTemplates(baseDir);
     const writer = new ConfigFileWriter(templates, baseDir);
 

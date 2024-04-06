@@ -41,6 +41,48 @@ const uriMapper = (p: DefinitionInfo) => {
         definition: p.definition,
     };
 };
+export enum VariableType {
+    ENV,
+    EXPLODED,
+    MAPPED
+}
+export type VariableInfo = {
+    type: VariableType;
+    value: string;
+    json?: boolean;
+}
+export type Variables = Record<string, VariableInfo>
+
+
+export function toEnvVars(value:{[key:string]:string}):Variables {
+    const out:Variables = {}
+    Object.entries(value).forEach(([key, value]) => {
+        out[key] = toEnvVar(value);
+    })
+    return out;
+}
+
+export function toEnvVar(value:string, json = false):VariableInfo {
+    return {
+        type: VariableType.ENV,
+        value,
+        json
+    }
+}
+
+export function toExplodedVar(value:string):VariableInfo {
+    return {
+        type: VariableType.EXPLODED,
+        value
+    }
+}
+
+export function toMappedVar(value:string):VariableInfo {
+    return {
+        type: VariableType.MAPPED,
+        value
+    }
+}
 
 /**
  * Resolves Kapeta variables for a given block
@@ -83,12 +125,12 @@ export class KapetaVariableResolver {
         return config;
     }
 
-    public async resolve(): Promise<AnyMap> {
-        const envVars: AnyMap<string> = {
-            [KAPETA_SYSTEM_ID]: this.configProvider.getSystemId(),
-            [KAPETA_BLOCK_REF]: this.configProvider.getBlockReference(),
-            [KAPETA_INSTANCE_ID]: this.configProvider.getInstanceId(),
-            [KAPETA_PROVIDER_HOST]: await this.configProvider.getServerHost(),
+    public async resolve(): Promise<Variables> {
+        const envVars: Variables = {
+            [KAPETA_SYSTEM_ID]: toEnvVar(this.configProvider.getSystemId()),
+            [KAPETA_BLOCK_REF]: toEnvVar(this.configProvider.getBlockReference()),
+            [KAPETA_INSTANCE_ID]: toEnvVar(this.configProvider.getInstanceId()),
+            [KAPETA_PROVIDER_HOST]: toEnvVar(await this.configProvider.getServerHost()),
         };
 
         if (this.block.spec?.providers) {
@@ -105,25 +147,29 @@ export class KapetaVariableResolver {
 
         Object.assign(envVars, await this.resolveForInstances());
 
-        envVars['KAPETA_INSTANCE_CONFIG'] = JSON.stringify(this.getConfiguration());
+        envVars['KAPETA_INSTANCE_CONFIG'] = toEnvVar(JSON.stringify(this.getConfiguration()), true);
         const exploded = explodeEnvVars(envVars);
-        const mappedVars = await this.resolveMappings(exploded as AnyMap<string>);
+        const mappedVars = await this.resolveMappings(exploded);
 
         return explodeEnvVars(mappedVars);
     }
 
-    private async resolveMappings(envVars: AnyMap<string>) {
+    private async resolveMappings(envVars: Variables) {
         const dotEnvRaw = await readConfigContent(KAPETA_DOTENV_FILE, this.baseDir);
         if (!dotEnvRaw) {
             return envVars;
         }
 
         const parsed = dotenv.parse(dotEnvRaw);
-        return interpolateDotEnv(parsed, envVars);
+        const parsedVariables:Variables = {}
+        Object.entries(envVars).forEach(([key, value]) => {
+            parsedVariables[key] = toMappedVar(value.value);
+        })
+        return interpolateDotEnv(parsedVariables, envVars);
     }
 
     private async resolveForInstances() {
-        const out: AnyMap<string> = {};
+        const out: Variables = {};
         const instanceIds =
             this.plan.spec?.blocks?.map((block) => {
                 return block.id;
@@ -136,12 +182,12 @@ export class KapetaVariableResolver {
             }
             Object.assign(out, await this.resolveForInstanceId(instanceId));
         }
-        out['KAPETA_BLOCK_HOSTS'] = JSON.stringify(blockHosts);
+        out['KAPETA_BLOCK_HOSTS'] = toEnvVar(JSON.stringify(blockHosts), true);
         return out;
     }
 
     private async resolveForInstanceId(instanceId: string) {
-        const out: AnyMap<string> = {};
+        const out: Variables = {};
 
         const blockInstance = this.plan.spec?.blocks?.find((block) => block.id === instanceId);
         if (!blockInstance) {
@@ -173,7 +219,7 @@ export class KapetaVariableResolver {
                 }
 
                 if (instance) {
-                    out[`KAPETA_INSTANCE_OPERATOR_${toEnvVarName(instanceId)}`] = JSON.stringify(instance);
+                    out[`KAPETA_INSTANCE_OPERATOR_${toEnvVarName(instanceId)}`] = toEnvVar(JSON.stringify(instance), true);
                 }
             } catch (e) {
                 // Ignore
@@ -184,7 +230,7 @@ export class KapetaVariableResolver {
     }
 
     private async resolveForConsumer(consumer: Resource) {
-        const out: AnyMap<string> = {};
+        const out: Variables = {};
         const portType = consumer.spec?.port?.type;
         const name = consumer.metadata.name;
         const kindUri = parseKapetaUri(consumer.kind);
@@ -197,13 +243,13 @@ export class KapetaVariableResolver {
         if (RESOURCE_TYPE_INTERNAL === resourceType.definition.kind) {
             const serviceAddress = await this.configProvider.getServiceAddress(name, portType);
             if (serviceAddress) {
-                out[`KAPETA_CONSUMER_SERVICE_${toEnvVarName(name)}_${toEnvVarName(portType)}`] = serviceAddress;
+                out[`KAPETA_CONSUMER_SERVICE_${toEnvVarName(name)}_${toEnvVarName(portType)}`] = toEnvVar(serviceAddress);
             }
 
             try {
                 const instance = await this.configProvider.getInstanceForConsumer(name);
                 if (instance) {
-                    out[`KAPETA_INSTANCE_FOR_CONSUMER_${toEnvVarName(name)}`] = JSON.stringify(instance);
+                    out[`KAPETA_INSTANCE_FOR_CONSUMER_${toEnvVarName(name)}`] = toEnvVar(JSON.stringify(instance), true);
                 }
             } catch (e) {
                 // Ignore
@@ -219,7 +265,7 @@ export class KapetaVariableResolver {
             }
             if (resourceInfo) {
                 out[`KAPETA_CONSUMER_RESOURCE_${toEnvVarName(name)}_${toEnvVarName(portType)}`] =
-                    JSON.stringify(resourceInfo);
+                    toEnvVar(JSON.stringify(resourceInfo), true);
             }
         }
 
@@ -227,7 +273,7 @@ export class KapetaVariableResolver {
     }
 
     private async resolveForProvider(provider: Resource) {
-        const out: AnyMap<string> = {};
+        const out: Variables = {};
         const kindUri = parseKapetaUri(provider.kind);
         const resourceType = this.getDefinition(kindUri);
         if (!resourceType) {
@@ -238,12 +284,12 @@ export class KapetaVariableResolver {
         const name = provider.metadata.name;
 
         if (HOST_PORT_TYPES.includes(portType.toLowerCase())) {
-            out[`KAPETA_PROVIDER_PORT_${portType.toUpperCase()}`] = await this.configProvider.getServerPort(portType);
+            out[`KAPETA_PROVIDER_PORT_${portType.toUpperCase()}`] = toEnvVar(await this.configProvider.getServerPort(portType));
         }
 
         const instances = await this.configProvider.getInstancesForProvider(name);
         if (instances) {
-            out[`KAPETA_INSTANCES_FOR_PROVIDER_${toEnvVarName(name)}`] = JSON.stringify(instances);
+            out[`KAPETA_INSTANCES_FOR_PROVIDER_${toEnvVarName(name)}`] = toEnvVar(JSON.stringify(instances), true);
         }
 
         return out;
@@ -256,7 +302,7 @@ export class KapetaVariableResolver {
 export async function resolveKapetaVariables(
     baseDir: string = process.cwd(),
     configProvider?: ConfigProvider
-): Promise<AnyMap> {
+): Promise<Variables> {
     if (!configProvider) {
         configProvider = await Config.init(baseDir);
     }

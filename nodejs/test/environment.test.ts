@@ -1,4 +1,5 @@
 import { explodeEnvValue, getKapetaEnvVars, toEnvVarName } from '../src/environment';
+import {toEnvVar, toExplodedVar} from "../src/variable-resolver";
 
 describe('environment', () => {
     it('can filter out all kapeta env vars from map', () => {
@@ -21,7 +22,7 @@ describe('environment', () => {
     it('can explode a JSON environment variable value into a set of environment variables', () => {
         // Arrange
         const key = 'KAPETA_ENV';
-        const value = JSON.stringify({
+        const value = toEnvVar(JSON.stringify({
             a: 1,
             b: 2,
             embedded: {
@@ -40,20 +41,20 @@ describe('environment', () => {
                     three: false,
                 },
             ],
-        });
+        }), true);
 
         const expected = {
             KAPETA_ENV: value,
-            KAPETA_ENV_A: '1',
-            KAPETA_ENV_B: '2',
-            KAPETA_ENV_EMBEDDED_C: '3',
-            KAPETA_ENV_EMBEDDED_D: '4',
-            KAPETA_ENV_ARRAY_0_ONE: 'FIRST ONE',
-            KAPETA_ENV_ARRAY_0_TWO: 'FIRST TWO',
-            KAPETA_ENV_ARRAY_0_THREE: 'true',
-            KAPETA_ENV_ARRAY_1_ONE: 'SECOND ONE',
-            KAPETA_ENV_ARRAY_1_TWO: 'SECOND TWO',
-            KAPETA_ENV_ARRAY_1_THREE: 'false',
+            KAPETA_ENV_A: toExplodedVar('1'),
+            KAPETA_ENV_B: toExplodedVar('2'),
+            KAPETA_ENV_EMBEDDED_C: toExplodedVar('3'),
+            KAPETA_ENV_EMBEDDED_D: toExplodedVar('4'),
+            KAPETA_ENV_ARRAY_0_ONE: toExplodedVar('FIRST ONE'),
+            KAPETA_ENV_ARRAY_0_TWO: toExplodedVar('FIRST TWO'),
+            KAPETA_ENV_ARRAY_0_THREE: toExplodedVar('true'),
+            KAPETA_ENV_ARRAY_1_ONE: toExplodedVar('SECOND ONE'),
+            KAPETA_ENV_ARRAY_1_TWO: toExplodedVar('SECOND TWO'),
+            KAPETA_ENV_ARRAY_1_THREE: toExplodedVar('false'),
         };
 
         const result = explodeEnvValue(key, value);
@@ -64,7 +65,7 @@ describe('environment', () => {
     it('ignores non-JSON environment variable values', () => {
         // Arrange
         const key = 'KAPETA_ENV';
-        const value = 'development';
+        const value = toEnvVar('development');
 
         const expected = {
             KAPETA_ENV: value,
@@ -78,7 +79,7 @@ describe('environment', () => {
     it('ignores non-JSON-Object environment variable values', () => {
         // Arrange
         const key = 'KAPETA_ENV';
-        const value = 'true';
+        const value = toEnvVar('true');
 
         const expected = {
             KAPETA_ENV: value,
