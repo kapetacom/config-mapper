@@ -1,20 +1,28 @@
 import Path from 'path';
 import FS from 'node:fs/promises';
-import { resolveKapetaVariables } from './variable-resolver';
-import { writeConfigTemplates } from './config-resolver';
-import { spawn } from '@kapeta/nodejs-process';
-import { writeDotEnvFile } from './dotenv-interpolation';
+import {resolveKapetaVariables, Variables, VariableType} from './variable-resolver';
+import {writeConfigTemplates} from './config-resolver';
+import {spawn} from '@kapeta/nodejs-process';
+import {DOTENV_FILE, writeDotEnvFile, writeEnvConfigFile} from './dotenv-interpolation';
 
 import YAML from 'yaml';
-import { Attachment, Kind } from '@kapeta/schemas';
-import { getAttachment, readAttachmentContent } from './attachments';
+import {Attachment, Kind} from '@kapeta/schemas';
+import {getAttachment, readAttachmentContent} from './attachments';
 import zlib from 'node:zlib';
 import util from 'node:util';
+import * as os from "os";
+import Config from "@kapeta/sdk-config";
 
 const gzip = util.promisify(zlib.gzip);
 const gunzip = util.promisify(zlib.gunzip);
 
+export const MAX_ENV_LENGTH = 256;
+export const KAPETA_CONFIG_ENV_VAR = 'KAPETA_CONFIG_PATH';
 export const KAPETA_YML = 'kapeta.yml';
+
+// We read environment variables from a json file to avoid argument length limits since some of
+// these might be quite long
+export const KAPETA_ENV_CONFIG_FILE = 'kapeta.env.config.json';
 
 export async function readKapetaYML(baseDir: string = process.cwd()): Promise<Kind> {
     const ymlPath = Path.join(baseDir, KAPETA_YML);
@@ -74,6 +82,25 @@ export async function writeConfig(baseDir: string = process.cwd()) {
     await writeConfigTemplates(kapetaVariables, baseDir);
 }
 
+
+export async function getEnvironmentVariables(kapetaVariables:Variables): Promise<Record<string, string>> {
+    const env: Record<string, string> = {};
+    for (const key in kapetaVariables) {
+        const variable = kapetaVariables[key];
+
+        if (variable.type !== VariableType.MAPPED &&
+            variable.value.length > MAX_ENV_LENGTH)  {
+            // Skip large values except if they are specifically mapped
+            continue;
+        }
+        env[key] = kapetaVariables[key].value;
+    }
+    return env;
+}
+
+export function getConfigFilePath(instanceId: string): string {
+    return Path.join(os.tmpdir(), instanceId, KAPETA_ENV_CONFIG_FILE);
+}
 /**
  * Run a command with the resolved Kapeta environment variables
  */
@@ -82,12 +109,22 @@ export async function runWithConfig(
     args: string[] = [],
     baseDir: string = process.cwd()
 ): Promise<ReturnType<typeof spawn>> {
-    const kapetaVariables = await resolveKapetaVariables(baseDir);
+    const config = await Config.init(baseDir);
+    const kapetaVariables = await resolveKapetaVariables(baseDir, config);
+
+    const configFilePath = getConfigFilePath(config.getInstanceId());
+
+    // Write the config to a file - will be read by the SDKs
+    await writeEnvConfigFile(kapetaVariables, configFilePath);
+
+    const env:NodeJS.ProcessEnv = {
+        ...process.env,
+        ...await getEnvironmentVariables(kapetaVariables),
+        [KAPETA_CONFIG_ENV_VAR]: configFilePath,
+    };
+
     return spawn(cmd, args, {
-        env: {
-            ...kapetaVariables,
-            ...process.env,
-        },
+        env,
         stdio: 'pipe',
         shell: true,
     });
