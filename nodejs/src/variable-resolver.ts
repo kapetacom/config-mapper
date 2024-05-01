@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: MIT
  */
 
-import dotenv from 'dotenv';
 import { BlockDefinition, Plan, Resource } from '@kapeta/schemas';
 import Config, {ConfigProvider, InstanceOperator, LocalConfigProvider, ResourceInfo} from '@kapeta/sdk-config';
 import ClusterConfiguration, { DefinitionInfo, Definition } from '@kapeta/local-cluster-config';
 import { parseKapetaUri, KapetaURI } from '@kapeta/nodejs-utils';
 import { explodeEnvVars, toEnvVarName } from './environment';
-import { interpolateDotEnv } from './dotenv-interpolation';
+import { readDotEnv } from './dotenv-interpolation';
 import { readConfigContent } from './utils';
 
 // The core types we're particularly interested in. TODO: These should be defined elsewhere.
@@ -160,12 +159,7 @@ export class KapetaVariableResolver {
             return envVars;
         }
 
-        const parsed = dotenv.parse(dotEnvRaw);
-        const parsedVariables:Variables = {}
-        Object.entries(envVars).forEach(([key, value]) => {
-            parsedVariables[key] = toMappedVar(value.value);
-        })
-        return interpolateDotEnv(parsedVariables, envVars);
+        return readDotEnv(dotEnvRaw, envVars);
     }
 
     private async resolveForInstances() {
