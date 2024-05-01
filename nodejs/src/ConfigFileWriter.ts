@@ -1,7 +1,7 @@
 import FS from 'node:fs/promises';
 import { interpolateVariablesInValue } from './dotenv-interpolation';
 import * as Path from 'path';
-import {Variables} from "./variable-resolver";
+import { Variables } from './variable-resolver';
 
 export type ConfigFileTemplates = {
     [path: string]: string;

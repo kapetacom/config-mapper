@@ -2,9 +2,9 @@ import {
     interpolateDotEnv,
     interpolateVariables,
     interpolateVariablesInValue,
-    readDotEnv
+    readDotEnv,
 } from '../src/dotenv-interpolation';
-import {toEnvVar, toEnvVars, toMappedVar, VariableType} from "../src/variable-resolver";
+import { toEnvVar, toEnvVars, toMappedVar, VariableType } from '../src/variable-resolver';
 
 describe('dotenv-interpolation', () => {
     it('can interpolate values in a string', () => {
@@ -30,9 +30,12 @@ describe('dotenv-interpolation', () => {
     });
 
     it('can merge simple dotenv with env vars', () => {
-        const data = readDotEnv('FOO=World', toEnvVars({
-            BAR: 'test'
-        }))
+        const data = readDotEnv(
+            'FOO=World',
+            toEnvVars({
+                BAR: 'test',
+            })
+        );
         expect(data).toEqual({
             FOO: {
                 type: VariableType.MAPPED,
@@ -43,13 +46,16 @@ describe('dotenv-interpolation', () => {
                 type: VariableType.ENV,
                 value: 'test',
             },
-        })
-    })
+        });
+    });
 
     it('can merge interpolated dotenv with env vars', () => {
-        const data = readDotEnv(`FOO=\${BAR} World`, toEnvVars({
-            BAR: 'Cruel'
-        }))
+        const data = readDotEnv(
+            `FOO=\${BAR} World`,
+            toEnvVars({
+                BAR: 'Cruel',
+            })
+        );
         expect(data).toEqual({
             FOO: {
                 type: VariableType.MAPPED,
@@ -60,13 +66,16 @@ describe('dotenv-interpolation', () => {
                 type: VariableType.ENV,
                 value: 'Cruel',
             },
-        })
-    })
+        });
+    });
 
     it('can interpolate dotenv with dotenv', () => {
-        const data = readDotEnv(`FOO=\${BAR} World\nBAR=Hallo`, toEnvVars({
-            BAR: 'Cruel'
-        }))
+        const data = readDotEnv(
+            `FOO=\${BAR} World\nBAR=Hallo`,
+            toEnvVars({
+                BAR: 'Cruel',
+            })
+        );
         expect(data).toEqual({
             FOO: {
                 type: VariableType.MAPPED,
@@ -76,8 +85,8 @@ describe('dotenv-interpolation', () => {
                 type: VariableType.MAPPED,
                 value: 'Hallo',
             },
-        })
-    })
+        });
+    });
 
     it('can interpolate default values', () => {
         const data = {};
@@ -103,10 +112,12 @@ describe('dotenv-interpolation', () => {
 
         const result = interpolateVariables(data);
 
-        expect(result).toEqual(toEnvVars({
-            FOO: 'World',
-            BAR: 'Cruel World',
-        }));
+        expect(result).toEqual(
+            toEnvVars({
+                FOO: 'World',
+                BAR: 'Cruel World',
+            })
+        );
     });
 
     it('interpolating a dot env files gives mapped variable values', () => {

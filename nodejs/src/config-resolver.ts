@@ -3,7 +3,7 @@ import FS from 'node:fs/promises';
 import YAML from 'yaml';
 import { ConfigFileTemplates, ConfigFileWriter } from './ConfigFileWriter';
 import { getAttachmentFromKapetaYML, readConfigContent } from './utils';
-import {Variables} from "./variable-resolver";
+import { Variables } from './variable-resolver';
 
 /**
  * The name of the configuration file

@@ -1,5 +1,5 @@
 import { ConfigFileWriter } from '../src/ConfigFileWriter';
-import {toEnvVar} from "../src/variable-resolver";
+import { toEnvVar } from '../src/variable-resolver';
 
 describe('ConfigFileWriter', () => {
     it('can render multiple templates', () => {

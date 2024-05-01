@@ -4,8 +4,8 @@
  */
 import Path from 'path';
 import FS from 'node:fs/promises';
-import {toMappedVar, VariableInfo, Variables} from "./variable-resolver";
-import dotenv from "dotenv";
+import { toMappedVar, VariableInfo, Variables } from './variable-resolver';
+import dotenv from 'dotenv';
 
 export const DOTENV_FILE = '.env';
 
@@ -60,7 +60,6 @@ export function interpolateVariablesInValue(value: string, data: Variables): str
             }
         }
     );
-
 }
 
 /**
@@ -77,12 +76,12 @@ export function interpolateVariables(data: Variables) {
     return output;
 }
 
-export function readDotEnv(dotEnvRaw:string, envVars: Variables): Variables {
+export function readDotEnv(dotEnvRaw: string, envVars: Variables): Variables {
     const parsed = dotenv.parse(dotEnvRaw);
-    const parsedVariables:Variables = {}
+    const parsedVariables: Variables = {};
     Object.entries(parsed).forEach(([key, value]) => {
         parsedVariables[key] = toMappedVar(value);
-    })
+    });
     return interpolateDotEnv(parsedVariables, envVars);
 }
 
@@ -104,20 +103,23 @@ export function interpolateDotEnv(dotEnv: Variables, data: Variables) {
     return output;
 }
 
-export async function writeEnvConfigFile(kapetaVariables: Variables, path:string) {
-    let values : Record<string,string> = {};
+export async function writeEnvConfigFile(kapetaVariables: Variables, path: string) {
+    let values: Record<string, string> = {};
     Object.entries(kapetaVariables).forEach(([key, value]) => {
-        values[key] = value.value
+        values[key] = value.value;
     });
 
     console.log('Writing config variables to %s', path);
     const baseDir = Path.dirname(path);
-    await FS.mkdir(baseDir, {recursive: true});
+    await FS.mkdir(baseDir, { recursive: true });
     await FS.writeFile(path, JSON.stringify(values));
 }
 
-
-export async function writeDotEnvFile(kapetaVariables: Variables, baseDir: string = process.cwd(), filename = DOTENV_FILE) {
+export async function writeDotEnvFile(
+    kapetaVariables: Variables,
+    baseDir: string = process.cwd(),
+    filename = DOTENV_FILE
+) {
     let dotEnv = '';
     Object.entries(kapetaVariables).forEach(([key, value]) => {
         dotEnv += `${key}=${JSON.stringify(value.value)}\n`;

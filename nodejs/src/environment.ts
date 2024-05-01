@@ -1,4 +1,4 @@
-import {toExplodedVar, VariableInfo, Variables} from "./variable-resolver";
+import { toExplodedVar, VariableInfo, Variables } from './variable-resolver';
 
 export type EnvVarMap = { [key: string]: string | undefined };
 

@@ -1,5 +1,5 @@
 import { explodeEnvValue, getKapetaEnvVars, toEnvVarName } from '../src/environment';
-import {toEnvVar, toExplodedVar} from "../src/variable-resolver";
+import { toEnvVar, toExplodedVar } from '../src/variable-resolver';
 
 describe('environment', () => {
     it('can filter out all kapeta env vars from map', () => {
@@ -22,26 +22,29 @@ describe('environment', () => {
     it('can explode a JSON environment variable value into a set of environment variables', () => {
         // Arrange
         const key = 'KAPETA_ENV';
-        const value = toEnvVar(JSON.stringify({
-            a: 1,
-            b: 2,
-            embedded: {
-                c: 3,
-                d: 4,
-            },
-            array: [
-                {
-                    one: 'FIRST ONE',
-                    two: 'FIRST TWO',
-                    three: true,
+        const value = toEnvVar(
+            JSON.stringify({
+                a: 1,
+                b: 2,
+                embedded: {
+                    c: 3,
+                    d: 4,
                 },
-                {
-                    one: 'SECOND ONE',
-                    two: 'SECOND TWO',
-                    three: false,
-                },
-            ],
-        }), true);
+                array: [
+                    {
+                        one: 'FIRST ONE',
+                        two: 'FIRST TWO',
+                        three: true,
+                    },
+                    {
+                        one: 'SECOND ONE',
+                        two: 'SECOND TWO',
+                        three: false,
+                    },
+                ],
+            }),
+            true
+        );
 
         const expected = {
             KAPETA_ENV: value,

@@ -1,17 +1,17 @@
 import Path from 'path';
 import FS from 'node:fs/promises';
-import {resolveKapetaVariables, Variables, VariableType} from './variable-resolver';
-import {writeConfigTemplates} from './config-resolver';
-import {spawn} from '@kapeta/nodejs-process';
-import {DOTENV_FILE, writeDotEnvFile, writeEnvConfigFile} from './dotenv-interpolation';
+import { resolveKapetaVariables, Variables, VariableType } from './variable-resolver';
+import { writeConfigTemplates } from './config-resolver';
+import { spawn } from '@kapeta/nodejs-process';
+import { DOTENV_FILE, writeDotEnvFile, writeEnvConfigFile } from './dotenv-interpolation';
 
 import YAML from 'yaml';
-import {Attachment, Kind} from '@kapeta/schemas';
-import {getAttachment, readAttachmentContent} from './attachments';
+import { Attachment, Kind } from '@kapeta/schemas';
+import { getAttachment, readAttachmentContent } from './attachments';
 import zlib from 'node:zlib';
 import util from 'node:util';
-import * as os from "os";
-import Config from "@kapeta/sdk-config";
+import * as os from 'os';
+import Config from '@kapeta/sdk-config';
 
 const gzip = util.promisify(zlib.gzip);
 const gunzip = util.promisify(zlib.gunzip);
@@ -82,14 +82,12 @@ export async function writeConfig(baseDir: string = process.cwd()) {
     await writeConfigTemplates(kapetaVariables, baseDir);
 }
 
-
-export async function getEnvironmentVariables(kapetaVariables:Variables): Promise<Record<string, string>> {
+export async function getEnvironmentVariables(kapetaVariables: Variables): Promise<Record<string, string>> {
     const env: Record<string, string> = {};
     for (const key in kapetaVariables) {
         const variable = kapetaVariables[key];
 
-        if (variable.type !== VariableType.MAPPED &&
-            variable.value.length > MAX_ENV_LENGTH)  {
+        if (variable.type !== VariableType.MAPPED && variable.value.length > MAX_ENV_LENGTH) {
             // Skip large values except if they are specifically mapped
             continue;
         }
@@ -117,9 +115,9 @@ export async function runWithConfig(
     // Write the config to a file - will be read by the SDKs
     await writeEnvConfigFile(kapetaVariables, configFilePath);
 
-    const env:NodeJS.ProcessEnv = {
+    const env: NodeJS.ProcessEnv = {
         ...process.env,
-        ...await getEnvironmentVariables(kapetaVariables),
+        ...(await getEnvironmentVariables(kapetaVariables)),
         [KAPETA_CONFIG_ENV_VAR]: configFilePath,
     };
 
