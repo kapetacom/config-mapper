@@ -1,5 +1,10 @@
-import {interpolateDotEnv, interpolateVariables, interpolateVariablesInValue} from '../src/dotenv-interpolation';
-import {toEnvVar, toEnvVars, toMappedVar} from "../src/variable-resolver";
+import {
+    interpolateDotEnv,
+    interpolateVariables,
+    interpolateVariablesInValue,
+    readDotEnv
+} from '../src/dotenv-interpolation';
+import {toEnvVar, toEnvVars, toMappedVar, VariableType} from "../src/variable-resolver";
 
 describe('dotenv-interpolation', () => {
     it('can interpolate values in a string', () => {
@@ -23,6 +28,56 @@ describe('dotenv-interpolation', () => {
         const result = interpolateVariablesInValue('Hello ${BAR}', data);
         expect(result).toEqual('Hello Cruel World');
     });
+
+    it('can merge simple dotenv with env vars', () => {
+        const data = readDotEnv('FOO=World', toEnvVars({
+            BAR: 'test'
+        }))
+        expect(data).toEqual({
+            FOO: {
+                type: VariableType.MAPPED,
+                value: 'World',
+            },
+            BAR: {
+                json: false,
+                type: VariableType.ENV,
+                value: 'test',
+            },
+        })
+    })
+
+    it('can merge interpolated dotenv with env vars', () => {
+        const data = readDotEnv(`FOO=\${BAR} World`, toEnvVars({
+            BAR: 'Cruel'
+        }))
+        expect(data).toEqual({
+            FOO: {
+                type: VariableType.MAPPED,
+                value: 'Cruel World',
+            },
+            BAR: {
+                json: false,
+                type: VariableType.ENV,
+                value: 'Cruel',
+            },
+        })
+    })
+
+    it('can interpolate dotenv with dotenv', () => {
+        const data = readDotEnv(`FOO=\${BAR} World\nBAR=Hallo`, toEnvVars({
+            BAR: 'Cruel'
+        }))
+        expect(data).toEqual({
+            FOO: {
+                type: VariableType.MAPPED,
+                value: 'Hallo World',
+            },
+            BAR: {
+                type: VariableType.MAPPED,
+                value: 'Hallo',
+            },
+        })
+    })
 
     it('can interpolate default values', () => {
         const data = {};

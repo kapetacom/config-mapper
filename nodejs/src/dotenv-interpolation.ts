@@ -5,6 +5,7 @@
 import Path from 'path';
 import FS from 'node:fs/promises';
 import {toMappedVar, VariableInfo, Variables} from "./variable-resolver";
+import dotenv from "dotenv";
 
 export const DOTENV_FILE = '.env';
 
@@ -74,6 +75,15 @@ export function interpolateVariables(data: Variables) {
         output[key] = variable;
     }
     return output;
+}
+
+export function readDotEnv(dotEnvRaw:string, envVars: Variables): Variables {
+    const parsed = dotenv.parse(dotEnvRaw);
+    const parsedVariables:Variables = {}
+    Object.entries(parsed).forEach(([key, value]) => {
+        parsedVariables[key] = toMappedVar(value);
+    })
+    return interpolateDotEnv(parsedVariables, envVars);
 }
 
 /**
