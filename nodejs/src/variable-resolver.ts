@@ -148,10 +148,10 @@ export class KapetaVariableResolver {
         Object.assign(envVars, await this.resolveForInstances());
 
         envVars['KAPETA_INSTANCE_CONFIG'] = toEnvVar(JSON.stringify(this.getConfiguration()), true);
-        const exploded = explodeEnvVars(envVars);
+        const exploded = envVars; // const exploded = explodeEnvVars(envVars);
         const mappedVars = await this.resolveMappings(exploded);
 
-        return explodeEnvVars(mappedVars);
+        return mappedVars; // explodeEnvVars(mappedVars);
     }
 
     private async resolveMappings(envVars: Variables) {
